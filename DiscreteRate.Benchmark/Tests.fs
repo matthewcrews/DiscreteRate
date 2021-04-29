@@ -1,7 +1,7 @@
 ﻿module DiscreteRate.Benchmark
 
 
-open DiscreteRate
+open DiscreteRate.Solver
 open BenchmarkDotNet.Attributes
 
 let operationCount = 10

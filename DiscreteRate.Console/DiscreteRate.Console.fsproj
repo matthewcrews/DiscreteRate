@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DiscreteRate\DiscreteRate.fsproj" />
+    <ProjectReference Include="..\DiscreteRate.Solver\DiscreteRate.Solver.fsproj" />
   </ItemGroup>
 
 </Project>

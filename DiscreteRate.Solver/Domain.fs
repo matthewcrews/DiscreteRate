@@ -1,6 +1,5 @@
 ﻿[<AutoOpen>]
-module DiscreteRate.Domain
-
+module DiscreteRate.Solver.Domain
 
 
 [<RequireQualifiedAccess>]
@@ -144,11 +143,6 @@ module Node =
     let ofSplit split =
         Node.Split split
 
-    let isProcess (n: Node) =
-        match n with
-        | Node.Transform _ -> true
-        | _ -> false
-
 
 [<RequireQualifiedAccess>]
 module Arc =
@@ -161,6 +155,7 @@ module Arc =
         }
 
 
+[<AbstractClass; Sealed>]
 type arc () =
 
     static member connect (source: Transform, dest: Transform) =

@@ -1,6 +1,6 @@
 ﻿open System
 
-open DiscreteRate
+open DiscreteRate.Solver
 
 [<EntryPoint>]
 let main argv =
@@ -56,10 +56,6 @@ let main argv =
 
     let nonMemoizedSolver = Solver nonMemoizeSettings
 
-
     let sln = nonMemoizedSolver.Solve network initialState
-
-    //printfn "%A" sln.FlowRates
-    //printfn "%A" sln.FillRates
 
     0 // return an integer exit code

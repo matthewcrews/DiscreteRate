@@ -1,5 +1,5 @@
 ﻿[<AutoOpen>]
-module DiscreteRate.Types
+module DiscreteRate.Solver.Types
 
 
 type ConversionFactor = ConversionFactor of float
