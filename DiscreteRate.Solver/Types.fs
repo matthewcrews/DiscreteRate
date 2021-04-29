@@ -184,5 +184,5 @@ type NetworkSolution = {
 
 type Settings = {
     MaxSolveTime_ms : int64
-    Memoize : bool
+    WriteLPFile : string option
 }

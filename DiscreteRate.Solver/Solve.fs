@@ -161,18 +161,13 @@ type Solver (settings: Settings) =
         | Unbounded _ -> invalidArg (nameof network) $"Network has infinite flow capacity"
         | _ -> invalidArg (nameof network) $"Network could not be solved"
 
-    let solverSettings = { Settings.basic with MaxDuration = settings.MaxSolveTime_ms; SolverType = SolverType.GLOP }
-    let previousSolutions = System.Collections.Generic.Dictionary ()
+
+    let solverSettings = 
+        { Settings.basic with 
+            MaxDuration = settings.MaxSolveTime_ms
+            SolverType = SolverType.GLOP
+            WriteLPFile = settings.WriteLPFile
+        }
 
     member _.Solve (network: Network) (state: NetworkState) =
-        
-        if settings.Memoize then
-            let key = (network, state)
-            match previousSolutions.TryGetValue key with
-            | true, solution -> solution
-            | false, _ ->
-                let solution = solve solverSettings network state
-                previousSolutions.Add (key, solution)
-                solution
-        else
-            solve solverSettings network state
+        solve solverSettings network state
