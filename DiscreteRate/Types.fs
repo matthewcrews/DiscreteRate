@@ -92,7 +92,9 @@ type Arc = {
         $"{this.Source.Label.Value}_to_{this.Sink.Label.Value}"
 
 
-type Network (arcs: Arc list) =
+type Network (arcs: seq<Arc>) =
+
+    let arcs = List.ofSeq arcs
 
     let nodes =
         arcs
