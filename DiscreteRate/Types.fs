@@ -28,11 +28,10 @@ type FillRate = FillRate of float
             value
 
 [<RequireQualifiedAccess>]
-type BufferLevel = 
-    | Finite of float
-    | Infinite // This must be the first case for comparison to work
-    static member Zero =
-        Finite 0.0
+type BufferState =
+    | Empty
+    | Full
+    | Partial
 
 [<RequireQualifiedAccess>]
 type MaxOutputRate =
@@ -49,7 +48,6 @@ type Transform = {
 
 type Buffer = {
     Label : Label
-    Capacity : BufferLevel
 } with
     override this.ToString () =
         $"Tank_{this.Label.Value}"
@@ -176,7 +174,7 @@ type Network (arcs: seq<Arc>) =
 
 
 type NetworkState = {
-    TankLevels : Map<Buffer, BufferLevel>
+    TankStates : Map<Buffer, BufferState>
 }
 
 type NetworkSolution = {

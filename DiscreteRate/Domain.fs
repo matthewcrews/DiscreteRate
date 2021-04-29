@@ -66,19 +66,6 @@ module ConversionFactor =
 
 
 [<RequireQualifiedAccess>]
-module BufferLevel =
-
-    let create bufferLevel =
-        if bufferLevel < 0.0 then
-            invalidArg (nameof bufferLevel) $"Cannot have a TankLevel less than 0.0"
-
-        if bufferLevel = infinity then
-            BufferLevel.Infinite
-        else
-            BufferLevel.Finite bufferLevel
-
-
-[<RequireQualifiedAccess>]
 module Proportion =
 
     let create proportion =
@@ -124,15 +111,11 @@ module Split =
 
 
 [<RequireQualifiedAccess>]
-module Tank =
+module Buffer =
 
-    let create label maxLevel =
-        if maxLevel < 0.0 then
-            invalidArg (nameof maxLevel) $"Cannot have a {nameof maxLevel} < 0.0"
-
+    let create label =
         {
             Label = Label.create label
-            Capacity = BufferLevel.create maxLevel
         }
 
 

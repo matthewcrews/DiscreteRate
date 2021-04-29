@@ -32,27 +32,17 @@ let createTankConstraints (state: NetworkState) (flowDecs: Map<Arc, Decision>) (
 
     let balanceConstraint =
         Constraint.create $"{buffer.Label}_Balance" (accumulationDec == inputExpr - outputExpr)
-        |> Some
 
-    let minAccumulationRate =
-        if state.TankLevels.[buffer] <= BufferLevel.Zero && (not outputArcs.IsEmpty) then
-            Constraint.create $"{buffer.Label}_MustFill" (accumulationDec >== 0.0)
-            |> Some
-        else
-            None
+    match state.TankStates.[buffer] with
+    | BufferState.Empty ->
+        let fillConstraint = Constraint.create $"{buffer.Label}_NoDrain" (accumulationDec >== 0.0)
+        [balanceConstraint; fillConstraint]
+    | BufferState.Full ->
+        let fillConstraint = Constraint.create $"{buffer.Label}_NoFill" (accumulationDec <== 0.0)
+        [balanceConstraint; fillConstraint]
+    | BufferState.Partial ->
+        [balanceConstraint]
 
-    let maxAccumulationRate =
-        match buffer.Capacity with
-        | BufferLevel.Finite _ ->
-            if state.TankLevels.[buffer] >= buffer.Capacity && (not inputArcs.IsEmpty) then
-                Constraint.create $"{buffer.Label}_MustDrain" (accumulationDec <== 0.0)
-                |> Some
-            else
-                None
-        | _ -> None
-            
-    [balanceConstraint; minAccumulationRate; maxAccumulationRate]
-    |> List.choose id
 
 
 let createMergeConstraints (flowDecs: Map<Arc, Decision>) (merge: Merge, (inputArcs, outputArc)) =
@@ -132,6 +122,7 @@ let buildModel (network: Network) (state: NetworkState) (flowDecs: Map<Arc, Deci
         |> Model.addConstraints splitConstraints
 
     model
+
 
 let composeResult (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Buffer, Decision>) (solution: Solution) =
 
