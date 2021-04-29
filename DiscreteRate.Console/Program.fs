@@ -51,7 +51,7 @@ let main argv =
 
     let nonMemoizeSettings = {
         MaxSolveTime_ms = 10_000L
-        Memoize = false
+        WriteLPFile = None
     }
 
     let nonMemoizedSolver = Solver nonMemoizeSettings
