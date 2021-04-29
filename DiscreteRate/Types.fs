@@ -174,7 +174,7 @@ type Network (arcs: seq<Arc>) =
 
 
 type NetworkState = {
-    TankStates : Map<Buffer, BufferState>
+    BufferStates : Map<Buffer, BufferState>
 }
 
 type NetworkSolution = {

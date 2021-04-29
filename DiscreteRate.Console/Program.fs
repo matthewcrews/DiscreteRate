@@ -18,11 +18,11 @@ let main argv =
 
     let operations =
         [1 .. operationCount - 1]
-        |> List.map (fun idx -> idx, Transform.create $"Operation{idx}" 1.0 10.0)
+        |> List.map (fun idx -> idx, Transform.create $"Transform{idx}" 1.0 10.0)
 
     let tanks =
         [0 .. operationCount - 1]
-        |> List.map (fun idx -> idx, Tank.create $"Tank{idx}" 10.0)
+        |> List.map (fun idx -> idx, Buffer.create $"Buffer{idx}")
         |> Map
 
     let sourceTank = tanks.[0]
@@ -42,12 +42,12 @@ let main argv =
         tanks
         |> Map.toSeq
         |> Seq.map snd
-        |> Seq.map (fun tank -> tank, BufferLevel.Finite 0.0)
+        |> Seq.map (fun tank -> tank, BufferState.Empty)
         |> Map
-        |> fun x -> x.Add (sourceTank, BufferLevel.Infinite)
+        |> fun x -> x.Add (sourceTank, BufferState.Partial)
 
 
-    let initialState = { TankLevels = tankLevels }
+    let initialState = { BufferStates = tankLevels }
 
     let nonMemoizeSettings = {
         MaxSolveTime_ms = 10_000L

@@ -113,7 +113,7 @@ module Split =
 [<RequireQualifiedAccess>]
 module Buffer =
 
-    let create label =
+    let create label : Buffer =
         {
             Label = Label.create label
         }

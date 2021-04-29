@@ -12,7 +12,7 @@ let operations =
 
 let tanks =
     [0 .. operationCount - 1]
-    |> List.map (fun idx -> idx, Tank.create $"Tank{idx}" 10.0)
+    |> List.map (fun idx -> idx, Buffer.create $"Tank{idx}")
     |> Map
 
 let sourceTank = tanks.[0]
@@ -28,16 +28,16 @@ let arcs =
 let network =
     Network arcs
 
-let tankLevels =
+let bufferStates =
     tanks
     |> Map.toSeq
     |> Seq.map snd
-    |> Seq.map (fun tank -> tank, BufferLevel.Finite 0.0)
+    |> Seq.map (fun tank -> tank, BufferState.Empty)
     |> Map
-    |> fun x -> x.Add (sourceTank, BufferLevel.Infinite)
+    |> fun x -> x.Add (sourceTank, BufferState.Partial)
 
 
-let initialState = { TankLevels = tankLevels }
+let initialState = { BufferStates = bufferStates }
 
 
 let nonMemoizeSettings = {

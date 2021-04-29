@@ -33,7 +33,7 @@ let createTankConstraints (state: NetworkState) (flowDecs: Map<Arc, Decision>) (
     let balanceConstraint =
         Constraint.create $"{buffer.Label}_Balance" (accumulationDec == inputExpr - outputExpr)
 
-    match state.TankStates.[buffer] with
+    match state.BufferStates.[buffer] with
     | BufferState.Empty ->
         let fillConstraint = Constraint.create $"{buffer.Label}_NoDrain" (accumulationDec >== 0.0)
         [balanceConstraint; fillConstraint]
