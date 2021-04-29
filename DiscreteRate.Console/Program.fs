@@ -18,7 +18,7 @@ let main argv =
 
     let operations =
         [1 .. operationCount - 1]
-        |> List.map (fun idx -> idx, Operation.create $"Operation{idx}" 1.0 10.0)
+        |> List.map (fun idx -> idx, Transform.create $"Operation{idx}" 1.0 10.0)
 
     let tanks =
         [0 .. operationCount - 1]
@@ -42,9 +42,9 @@ let main argv =
         tanks
         |> Map.toSeq
         |> Seq.map snd
-        |> Seq.map (fun tank -> tank, TankLevel.Finite 0.0)
+        |> Seq.map (fun tank -> tank, BufferLevel.Finite 0.0)
         |> Map
-        |> fun x -> x.Add (sourceTank, TankLevel.Infinite)
+        |> fun x -> x.Add (sourceTank, BufferLevel.Infinite)
 
 
     let initialState = { TankLevels = tankLevels }

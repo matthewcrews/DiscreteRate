@@ -28,7 +28,7 @@ type FillRate = FillRate of float
             value
 
 [<RequireQualifiedAccess>]
-type TankLevel = 
+type BufferLevel = 
     | Finite of float
     | Infinite // This must be the first case for comparison to work
     static member Zero =
@@ -39,7 +39,7 @@ type MaxOutputRate =
     | Finite of FlowRate
     | Infinite // This must be the first case for comparison to work
 
-type Operation = {
+type Transform = {
     Label : Label
     ConversionFactor : ConversionFactor
     MaxOutputRate : MaxOutputRate
@@ -47,9 +47,9 @@ type Operation = {
    override this.ToString () =
        $"Operation_{this.Label.Value}"
 
-type Tank = {
+type Buffer = {
     Label : Label
-    MaxLevel : TankLevel
+    Capacity : BufferLevel
 } with
     override this.ToString () =
         $"Tank_{this.Label.Value}"
@@ -68,17 +68,17 @@ type Split = {
 
 [<RequireQualifiedAccess>]
 type Node =
-    | Operation of Operation
-    | Tank of Tank
+    | Transform of Transform
+    | Buffer of Buffer
     | Merge of Merge
     | Split of Split
     with
         member this.Label =
             match this with
-            | Operation n -> n.Label
-            | Tank    n -> n.Label
-            | Merge   n -> n.Label
-            | Split   n -> n.Label
+            | Transform n -> n.Label
+            | Buffer    n -> n.Label
+            | Merge     n -> n.Label
+            | Split     n -> n.Label
 
 type Arc = {
     Source : Node
@@ -115,7 +115,7 @@ type Network (arcs: seq<Arc>) =
         nodes
         |> Seq.fold (fun (operationArcs, tankArcs, mergeArcs, splitArcs) node ->
             match node with
-            | Node.Operation operation ->
+            | Node.Transform operation ->
                 let inbound =
                     match inboundArcs.[node] with
                     | [arc] -> arc
@@ -126,7 +126,7 @@ type Network (arcs: seq<Arc>) =
                     | _ -> invalidArg "Inbound" "Cannot have Operation with more than one output"
                 let newOperationArcs = Map.add operation (inbound, outbound) operationArcs
                 newOperationArcs, tankArcs, mergeArcs, splitArcs
-            | Node.Tank tank ->
+            | Node.Buffer tank ->
                 let inbound = 
                     match Map.tryFind node inboundArcs with
                     | Some arcs -> arcs
@@ -176,12 +176,12 @@ type Network (arcs: seq<Arc>) =
 
 
 type NetworkState = {
-    TankLevels : Map<Tank, TankLevel>
+    TankLevels : Map<Buffer, BufferLevel>
 }
 
 type NetworkSolution = {
     FlowRates : Map<Arc, FlowRate>
-    FillRates : Map<Tank, FillRate>
+    FillRates : Map<Buffer, FillRate>
 }
 
 type Settings = {

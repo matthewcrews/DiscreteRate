@@ -1,13 +1,13 @@
 ﻿[<AutoOpen>]
 module DiscreteRate.Domain
 
-open System
+
 
 [<RequireQualifiedAccess>]
 module Label =
 
     let create label =
-        if String.IsNullOrEmpty label then
+        if System.String.IsNullOrEmpty label then
             invalidArg (nameof label) $"Cannot have a null or empty Label"
 
         Label label
@@ -66,16 +66,16 @@ module ConversionFactor =
 
 
 [<RequireQualifiedAccess>]
-module TankLevel =
+module BufferLevel =
 
-    let create tankLevel =
-        if tankLevel < 0.0 then
-            invalidArg (nameof tankLevel) $"Cannot have a TankLevel less than 0.0"
+    let create bufferLevel =
+        if bufferLevel < 0.0 then
+            invalidArg (nameof bufferLevel) $"Cannot have a TankLevel less than 0.0"
 
-        if tankLevel = infinity then
-            TankLevel.Infinite
+        if bufferLevel = infinity then
+            BufferLevel.Infinite
         else
-            TankLevel.Finite tankLevel
+            BufferLevel.Finite bufferLevel
 
 
 [<RequireQualifiedAccess>]
@@ -92,7 +92,7 @@ module Proportion =
 
 
 [<RequireQualifiedAccess>]
-module Operation =
+module Transform =
 
     let create label conversionFactor maxOutputRate =
         if conversionFactor <= 0.0 then
@@ -132,7 +132,7 @@ module Tank =
 
         {
             Label = Label.create label
-            MaxLevel = TankLevel.create maxLevel
+            Capacity = BufferLevel.create maxLevel
         }
 
 
@@ -149,11 +149,11 @@ module NetworkSolution =
 [<RequireQualifiedAccess>]
 module Node =
 
-    let ofOperation operation =
-        Node.Operation operation
+    let ofTransform transform =
+        Node.Transform transform
 
-    let ofTank tank =
-        Node.Tank tank
+    let ofBuffer buffer =
+        Node.Buffer buffer
 
     let ofMerge merge =
         Node.Merge merge
@@ -163,7 +163,7 @@ module Node =
 
     let isProcess (n: Node) =
         match n with
-        | Node.Operation _ -> true
+        | Node.Transform _ -> true
         | _ -> false
 
 
@@ -180,32 +180,32 @@ module Arc =
 
 type arc () =
 
-    static member connect (source: Operation, dest: Operation) =
-        let s = Node.Operation source
-        let d = Node.Operation dest
+    static member connect (source: Transform, dest: Transform) =
+        let s = Node.Transform source
+        let d = Node.Transform dest
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Operation, dest: Merge, proportion:float) =
-        let s = Node.Operation source
+    static member connect (source: Transform, dest: Merge, proportion:float) =
+        let s = Node.Transform source
         let d = Node.Merge dest
         Arc.create s d proportion
 
-    static member connect (source: Operation, dest: Split) =
-        let s = Node.Operation source
+    static member connect (source: Transform, dest: Split) =
+        let s = Node.Transform source
         let d = Node.Split dest
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Operation, dest: Tank) =
-        let s = Node.Operation source
-        let d = Node.Tank dest
+    static member connect (source: Transform, dest: Buffer) =
+        let s = Node.Transform source
+        let d = Node.Buffer dest
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Merge, dest: Operation) =
+    static member connect (source: Merge, dest: Transform) =
         let s = Node.Merge source
-        let d = Node.Operation dest
+        let d = Node.Transform dest
         let p = 1.0
         Arc.create s d p
 
@@ -220,43 +220,43 @@ type arc () =
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Merge, dest: Tank) =
+    static member connect (source: Merge, dest: Buffer) =
         let s = Node.Merge source
-        let d = Node.Tank dest
+        let d = Node.Buffer dest
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Tank, dest: Merge, proportion:float) =
-        let s = Node.Tank source
+    static member connect (source: Buffer, dest: Merge, proportion:float) =
+        let s = Node.Buffer source
         let d = Node.Merge dest
         Arc.create s d proportion
 
-    static member connect (source: Tank, dest: Split) =
-        let s = Node.Tank source
+    static member connect (source: Buffer, dest: Split) =
+        let s = Node.Buffer source
         let d = Node.Split dest
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Tank, dest: Tank) =
-        let s = Node.Tank source
-        let d = Node.Tank dest
+    static member connect (source: Buffer, dest: Buffer) =
+        let s = Node.Buffer source
+        let d = Node.Buffer dest
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Tank, dest: Operation) =
-        let s = Node.Tank source
-        let d = Node.Operation dest
+    static member connect (source: Buffer, dest: Transform) =
+        let s = Node.Buffer source
+        let d = Node.Transform dest
         let p = 1.0
         Arc.create s d p
 
-    static member connect (source: Split, dest: Operation, proportion: float) =
+    static member connect (source: Split, dest: Transform, proportion: float) =
         let s = Node.Split source
-        let d = Node.Operation dest
+        let d = Node.Transform dest
         Arc.create s d proportion
 
-    static member connect (source: Split, dest: Tank, proportion: float) =
+    static member connect (source: Split, dest: Buffer, proportion: float) =
         let s = Node.Split source
-        let d = Node.Tank dest
+        let d = Node.Buffer dest
         Arc.create s d proportion
 
     static member connect (source: Split, dest: Merge, proportion: float) =

@@ -4,21 +4,21 @@ module DiscreteRate.Solve
 open Flips
 open Flips.Types
 
-let createOperationConstraints (flowDecs: Map<Arc, Decision>) (operation: Operation, (inputArc, outputArc)) =
+let createOperationConstraints (flowDecs: Map<Arc, Decision>) (transform: Transform, (inputArc, outputArc)) =
 
     let balanceConstraint =
-        Constraint.create $"{operation.Label}_Balance" (operation.ConversionFactor.Value * flowDecs.[inputArc] == flowDecs.[outputArc])
+        Constraint.create $"{transform.Label}_Balance" (transform.ConversionFactor.Value * flowDecs.[inputArc] == flowDecs.[outputArc])
 
-    match operation.MaxOutputRate with
+    match transform.MaxOutputRate with
     | MaxOutputRate.Finite mf ->
         let maxFlowConstraint =
-            Constraint.create $"{operation.Label}_MaxFlow" (flowDecs.[outputArc] <== mf.Value)
+            Constraint.create $"{transform.Label}_MaxFlow" (flowDecs.[outputArc] <== mf.Value)
         [balanceConstraint; maxFlowConstraint]
     | MaxOutputRate.Infinite ->
         [balanceConstraint]
 
 
-let createTankConstraints (state: NetworkState) (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Tank, Decision>) (tank: Tank, (inputArcs, outputArcs)) =
+let createTankConstraints (state: NetworkState) (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Buffer, Decision>) (buffer: Buffer, (inputArcs, outputArcs)) =
 
     let inputExpr =
         inputArcs
@@ -28,24 +28,24 @@ let createTankConstraints (state: NetworkState) (flowDecs: Map<Arc, Decision>) (
         outputArcs
         |> List.sumBy (fun arc -> 1.0 * flowDecs.[arc])
 
-    let accumulationDec = fillDecs.[tank]
+    let accumulationDec = fillDecs.[buffer]
 
     let balanceConstraint =
-        Constraint.create $"{tank.Label}_Balance" (accumulationDec == inputExpr - outputExpr)
+        Constraint.create $"{buffer.Label}_Balance" (accumulationDec == inputExpr - outputExpr)
         |> Some
 
     let minAccumulationRate =
-        if state.TankLevels.[tank] <= TankLevel.Zero && (not outputArcs.IsEmpty) then
-            Constraint.create $"{tank.Label}_MustFill" (accumulationDec >== 0.0)
+        if state.TankLevels.[buffer] <= BufferLevel.Zero && (not outputArcs.IsEmpty) then
+            Constraint.create $"{buffer.Label}_MustFill" (accumulationDec >== 0.0)
             |> Some
         else
             None
 
     let maxAccumulationRate =
-        match tank.MaxLevel with
-        | TankLevel.Finite _ ->
-            if state.TankLevels.[tank] >= tank.MaxLevel && (not inputArcs.IsEmpty) then
-                Constraint.create $"{tank.Label}_MustDrain" (accumulationDec <== 0.0)
+        match buffer.Capacity with
+        | BufferLevel.Finite _ ->
+            if state.TankLevels.[buffer] >= buffer.Capacity && (not inputArcs.IsEmpty) then
+                Constraint.create $"{buffer.Label}_MustDrain" (accumulationDec <== 0.0)
                 |> Some
             else
                 None
@@ -95,7 +95,7 @@ let createSplitConstraints (flowDecs: Map<Arc, Decision>) (split: Split, (inputA
     balanceConstraint::proportionalConstraints
 
 
-let buildModel (network: Network) (state: NetworkState) (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Tank, Decision>) =
+let buildModel (network: Network) (state: NetworkState) (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Buffer, Decision>) =
 
     let operationConstraints =
         network.Operation
@@ -133,7 +133,7 @@ let buildModel (network: Network) (state: NetworkState) (flowDecs: Map<Arc, Deci
 
     model
 
-let composeResult (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Tank, Decision>) (solution: Solution) =
+let composeResult (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Buffer, Decision>) (solution: Solution) =
 
     let flowRates =
         Solution.getValues solution flowDecs
