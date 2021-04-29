@@ -248,3 +248,23 @@ type arc () =
         let d = Node.Operation dest
         let p = 1.0
         Arc.create s d p
+
+    static member connect (source: Split, dest: Operation, proportion: float) =
+        let s = Node.Split source
+        let d = Node.Operation dest
+        Arc.create s d proportion
+
+    static member connect (source: Split, dest: Tank, proportion: float) =
+        let s = Node.Split source
+        let d = Node.Tank dest
+        Arc.create s d proportion
+
+    static member connect (source: Split, dest: Merge, proportion: float) =
+        let s = Node.Split source
+        let d = Node.Merge dest
+        Arc.create s d proportion
+
+    static member connect (source: Split, dest: Split, proportion: float) =
+        let s = Node.Split source
+        let d = Node.Split dest
+        Arc.create s d proportion

@@ -64,12 +64,13 @@ let createMergeConstraints (flowDecs: Map<Arc, Decision>) (merge: Merge, (inputA
     let balanceConstraint =
         Constraint.create $"{merge.Label}_Balance" (inputExpr == flowDecs.[outputArc])
 
+    let proportionTotal = inputArcs |> List.sumBy (fun arc -> arc.Proportion.Value)
+
     let proportionalConstraints =
-        inputArcs
-        |> List.pairwise 
-        |> List.map (fun (arcA, arcB) ->
-            Constraint.create $"{merge.Label}_{arcA.Label}_{arcB.Label}_Proportion" (arcA.Proportion.Value * flowDecs.[arcA] == arcB.Proportion.Value * flowDecs.[arcB])
-        )
+        ConstraintBuilder "Proportional" {
+            for arc in inputArcs ->
+                flowDecs.[arc] == (arc.Proportion.Value / proportionTotal) * flowDecs.[outputArc]
+        } |> List.ofSeq
 
     balanceConstraint::proportionalConstraints
 
@@ -83,12 +84,13 @@ let createSplitConstraints (flowDecs: Map<Arc, Decision>) (split: Split, (inputA
     let balanceConstraint =
         Constraint.create $"{split.Label}_Balance" (flowDecs.[inputArc] == outputExpr)
 
+    let proportionTotal = outputArcs |> List.sumBy (fun arc -> arc.Proportion.Value)
+
     let proportionalConstraints =
-        outputArcs
-        |> List.pairwise 
-        |> List.map (fun (arcA, arcB) ->
-            Constraint.create $"{split.Label}_{arcA.Label}_{arcB.Label}_Proportion" (arcA.Proportion.Value * flowDecs.[arcA] == arcB.Proportion.Value * flowDecs.[arcB])
-        )
+        ConstraintBuilder "Proportion" {
+            for arc in outputArcs ->
+                (arc.Proportion.Value / proportionTotal) * flowDecs.[inputArc] == flowDecs.[arc]
+        } |> List.ofSeq
 
     balanceConstraint::proportionalConstraints
 
@@ -169,7 +171,7 @@ let solve (solverSettings: SolverSettings) (network: Network) (state: NetworkSta
 
 type Solver (settings: Settings) =
 
-    let solverSettings = { Settings.basic with MaxDuration = settings.MaxSolveTime_ms; WriteLPFile = Some "test_2.lp"; SolverType = SolverType.GLOP }
+    let solverSettings = { Settings.basic with MaxDuration = settings.MaxSolveTime_ms; SolverType = SolverType.GLOP }
     let previousSolutions = System.Collections.Generic.Dictionary ()
 
     member _.Solve (network: Network) (state: NetworkState) =
