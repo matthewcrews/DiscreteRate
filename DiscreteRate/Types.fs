@@ -29,39 +29,42 @@ type FillRate = FillRate of float
 
 [<RequireQualifiedAccess>]
 type TankLevel = 
-    | Infinite // This must be the first case for comparison to work
     | Finite of float
+    | Infinite // This must be the first case for comparison to work
     static member Zero =
         Finite 0.0
 
 [<RequireQualifiedAccess>]
 type MaxOutputRate =
-    | Infinite // This must be the first case for comparison to work
     | Finite of FlowRate
+    | Infinite // This must be the first case for comparison to work
 
 type Operation = {
     Label : Label
     ConversionFactor : ConversionFactor
     MaxOutputRate : MaxOutputRate
-}
-
-//[<RequireQualifiedAccess>]
-//type Capacity =
-//    | Infinite // This must be the first case for comparison to work
-//    | Finite of TankLevel
+}with
+   override this.ToString () =
+       $"Operation_{this.Label.Value}"
 
 type Tank = {
     Label : Label
     MaxLevel : TankLevel
-}
+} with
+    override this.ToString () =
+        $"Tank_{this.Label.Value}"
 
 type Merge = {
     Label : Label
-}
+} with
+   override this.ToString () =
+       $"Merge_{this.Label.Value}"
 
 type Split = {
     Label : Label
-}
+} with
+   override this.ToString () =
+       $"Split_{this.Label.Value}"
 
 [<RequireQualifiedAccess>]
 type Node =
@@ -83,7 +86,10 @@ type Arc = {
     Proportion : Proportion
 } with
     member this.Label =
-        $"{this.Source.Label}->{this.Sink.Label}"
+        $"{this.Source.Label}_to_{this.Sink.Label}"
+
+    override this.ToString () =
+        $"{this.Source.Label.Value}_to_{this.Sink.Label.Value}"
 
 
 type Network (arcs: Arc list) =
@@ -119,8 +125,14 @@ type Network (arcs: Arc list) =
                 let newOperationArcs = Map.add operation (inbound, outbound) operationArcs
                 newOperationArcs, tankArcs, mergeArcs, splitArcs
             | Node.Tank tank ->
-                let inbound = inboundArcs.[node]
-                let outbound = outboundArcs.[node]
+                let inbound = 
+                    match Map.tryFind node inboundArcs with
+                    | Some arcs -> arcs
+                    | None -> []
+                let outbound = 
+                    match Map.tryFind node outboundArcs with
+                    | Some arcs -> arcs
+                    | None -> []
                 let newTankArcs = Map.add tank (inbound, outbound) tankArcs
                 operationArcs, newTankArcs, mergeArcs, splitArcs
             | Node.Merge merge ->

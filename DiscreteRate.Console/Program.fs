@@ -6,10 +6,10 @@ open DiscreteRate
 let main argv =
 
     let source = Tank.create "Source" infinity
-    let sink = Tank.create "Sink" infinity
     let op1 = Operation.create "Operation1" 1.0 10.0
     let tank1 = Tank.create "Tank1" 10.0
     let op2 = Operation.create "Operation2" 1.0 5.0
+    let sink = Tank.create "Sink" infinity
 
     let network =
         Network [

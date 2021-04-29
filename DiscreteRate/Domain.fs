@@ -17,7 +17,7 @@ module Label =
 module FlowRate =
 
     let create flowRate =
-        if flowRate <= 0.0 then
+        if flowRate < 0.0 then
             invalidArg (nameof flowRate) $"Cannot have a FlowRate less than or equal to 0.0"
 
         if flowRate = infinity then
@@ -30,8 +30,8 @@ module FlowRate =
 module FillRate =
 
     let create fillRate =
-        if fillRate <= 0.0 then
-            invalidArg (nameof fillRate) $"Cannot have a FillRate less than or equal to 0.0"
+        if fillRate = -infinity then
+            invalidArg (nameof fillRate) $"Cannot have a FillRate negative infinity"
 
         if fillRate = infinity then
             invalidArg (nameof fillRate) $"Cannot have a FillRate of infinity"

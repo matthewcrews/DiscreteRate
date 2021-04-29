@@ -7,7 +7,7 @@ open Flips.Types
 let createOperationConstraints (flowDecs: Map<Arc, Decision>) (operation: Operation, (inputArc, outputArc)) =
 
     let balanceConstraint =
-        Constraint.create $"{operation.Label}_Balance" (flowDecs.[inputArc] == operation.ConversionFactor.Value * flowDecs.[outputArc])
+        Constraint.create $"{operation.Label}_Balance" (operation.ConversionFactor.Value * flowDecs.[inputArc] == flowDecs.[outputArc])
 
     match operation.MaxOutputRate with
     | MaxOutputRate.Finite mf ->
@@ -35,17 +35,17 @@ let createTankConstraints (state: NetworkState) (flowDecs: Map<Arc, Decision>) (
         |> Some
 
     let minAccumulationRate =
-        if state.TankLevels.[tank] <= TankLevel.Zero then
-            Constraint.create $"{tank.Label}_MinFlow" (accumulationDec >== 0.0)
+        if state.TankLevels.[tank] <= TankLevel.Zero && (not outputArcs.IsEmpty) then
+            Constraint.create $"{tank.Label}_MustFill" (accumulationDec >== 0.0)
             |> Some
         else
             None
 
     let maxAccumulationRate =
         match tank.MaxLevel with
-        | TankLevel.Finite maxValue ->
-            if state.TankLevels.[tank] >= tank.MaxLevel then
-                Constraint.create $"{tank.Label}_MinFlow" (accumulationDec <== maxValue)
+        | TankLevel.Finite _ ->
+            if state.TankLevels.[tank] >= tank.MaxLevel && (not inputArcs.IsEmpty) then
+                Constraint.create $"{tank.Label}_MustDrain" (accumulationDec <== 0.0)
                 |> Some
             else
                 None
@@ -147,15 +147,15 @@ let composeResult (flowDecs: Map<Arc, Decision>) (fillDecs: Map<Tank, Decision>)
 let solve (solverSettings: SolverSettings) (network: Network) (state: NetworkState) =
 
     let flowDecs =
-        DecisionBuilder "FlowRate" {
+        DecisionBuilder "Flow" {
             for arc in network.Arcs ->
                 Continuous (0.0, infinity)
         } |> Map
 
     let fillDecs =
-        DecisionBuilder "TankAccumulation" {
+        DecisionBuilder "Fill" {
             for tank in network.Tank |> Map.toSeq |> Seq.map fst ->
-                Continuous (0.0, infinity)
+                Continuous (-infinity, infinity)
         } |> Map
 
     let model = buildModel network state flowDecs fillDecs
@@ -169,7 +169,7 @@ let solve (solverSettings: SolverSettings) (network: Network) (state: NetworkSta
 
 type Solver (settings: Settings) =
 
-    let solverSettings = { Settings.basic with MaxDuration = settings.MaxSolveTime_ms }
+    let solverSettings = { Settings.basic with MaxDuration = settings.MaxSolveTime_ms; WriteLPFile = Some "test_2.lp"; SolverType = SolverType.GLOP }
     let previousSolutions = System.Collections.Generic.Dictionary ()
 
     member _.Solve (network: Network) (state: NetworkState) =
