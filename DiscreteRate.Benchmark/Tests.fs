@@ -49,7 +49,7 @@ let nonMemoizedSolver = Solver nonMemoizeSettings
 
 let memoizedSettings = {
     MaxSolveTime_ms = 10_000L
-    Memoize = false
+    Memoize = true
 }
 
 let memoizedSolver = Solver memoizedSettings
